@@ -122,10 +122,10 @@
                         </userDefinedRuntimeAttributes>
                     </view>
                     <connections>
-                        <outlet property="indexUILable" destination="GlR-8B-r8F" id="p6k-ds-i6u"/>
+                        <outlet property="indexLable" destination="GlR-8B-r8F" id="nN9-2p-PVM"/>
                         <outlet property="noUIButton" destination="9C1-Un-MuV" id="0x9-MD-lqi"/>
-                        <outlet property="previewUIImage" destination="au3-ka-fRc" id="EdX-EB-r1G"/>
-                        <outlet property="questionUILable" destination="zDB-To-rqh" id="2B6-Wl-0Cf"/>
+                        <outlet property="previewImage" destination="au3-ka-fRc" id="fSx-K9-DH8"/>
+                        <outlet property="questionLable" destination="zDB-To-rqh" id="nzd-Tj-Bsr"/>
                         <outlet property="yesUIButton" destination="l0C-2o-ott" id="OLC-Qx-F7a"/>
                     </connections>
                 </viewController>
