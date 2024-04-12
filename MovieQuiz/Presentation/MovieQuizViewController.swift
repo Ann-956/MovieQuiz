@@ -14,33 +14,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
     private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol = QuestionFactory()
     private var currentQuestion: QuizQuestion?
-    private var statisticService = StatisticServiceImplementation()
+    private var statisticService: StatisticService?
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        func getMovies(from jsonString: String) -> Movie? {
-            if let jsonData = jsonString.data(using: .utf8) {
-                do {
-                    let top = try JSONDecoder().decode(Movie.self, from: jsonData)
-                    return top
-                } catch {
-                    print("Failed to parse: \(error.localizedDescription)")
-                }
-            } else {
-                print("Failed to convert string to data")
-            }
-            return nil
-        }
-    
-
-
-        
+        statisticService = StatisticServiceImplementation()
         
         let questionFactory = QuestionFactory()
         questionFactory.setup(delegate: self)
         self.questionFactory = questionFactory
         questionFactory.requestNextQuestion()
+    
     }
     // MARK: - QuestionFactoryDelegate
     
@@ -91,7 +76,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
             return
         }
         let givenAnswer = true
-        noUIButton.isEnabled = false
+        yesUIButton.isEnabled = false
         
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
@@ -113,21 +98,28 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
     
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
-            let record = GameRecord(correct: correctAnswers, total: questionsAmount, date: Date())
-            statisticService.store(correct: correctAnswers, total: questionsAmount)
-
+            guard let service = statisticService as? StatisticServiceImplementation else {
+                return
+            }
+            
+            service.store(correct: correctAnswers, total: questionsAmount)
+            
+            let gamesCount = service.gamesCount
+            let bestGame = service.bestGame
             let text = correctAnswers == questionsAmount ?
-            "Поздравляем, вы ответили на 10 из 10! \n" :
-            "Ваш результат \(correctAnswers)/\(questionsAmount)\n" +
-            "Количество сыграных квизов: \(statisticService.gamesCount)\n" +
-            "Рекорд: \(record.correct)/\(record.total) (\(record.date.dateTimeString))\n" +
-             "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
+                "Поздравляем, вы ответили на 10 из 10! \n" :
+                "Ваш результат \(correctAnswers)/\(questionsAmount)\n" +
+                "Количество сыграных квизов: \(gamesCount)\n" +
+                "Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))\n" +
+                "Средняя точность: \(String(format: "%.2f", service.totalAccuracy))%"
             
             let viewModel = QuizResultsViewModel(
                 title: "Этот раунд окончен!",
                 text: text,
                 buttonText: "Сыграть ещё раз")
-            showResult(quiz: viewModel)
+                showResult(quiz: viewModel)
+                yesUIButton.isEnabled = true
+                noUIButton.isEnabled = true
         } else {
             currentQuestionIndex += 1
             questionFactory.requestNextQuestion()
@@ -136,15 +128,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
         }
     }
 
+
+
     
     private func showResult(quiz result: QuizResultsViewModel) {
         let alertModel = AlertModel(
             title: result.title,
             message: result.text,
             buttonText: result.buttonText) {
+            
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
-                
                 self.questionFactory.requestNextQuestion()
             }
         

@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-class AlertPresenter {
+final class AlertPresenter {
     static func presentAlert(from viewController: UIViewController, with model: AlertModel) {
         let alert = UIAlertController(
             title: model.title,

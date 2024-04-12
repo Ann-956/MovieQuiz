@@ -9,21 +9,23 @@ final class StatisticServiceImplementation: StatisticService {
     let userDefaults = UserDefaults.standard
     
     func store(correct count: Int, total amount: Int) {
-        let currentBestGame = bestGame
-        let newGameRecord = GameRecord(correct: count, total: amount, date: Date())
-        
-        if newGameRecord.isBettertThan(currentBestGame) {
-            bestGame = newGameRecord
+        var currentBestGame = bestGame
+        let record = GameRecord(correct: count, total: amount, date: Date())
+  
+        if record.isBettertThan(currentBestGame) {
+            currentBestGame = record
+            bestGame = currentBestGame
         }
         
         let totalCorrect = userDefaults.integer(forKey: Keys.correct.rawValue) + count
         userDefaults.set(totalCorrect, forKey: Keys.correct.rawValue)
-    
+
         let totalQuestions = userDefaults.integer(forKey: Keys.total.rawValue) + amount
         userDefaults.set(totalQuestions, forKey: Keys.total.rawValue)
         
         gamesCount += 1
     }
+
     
     var totalAccuracy: Double {
         get {
