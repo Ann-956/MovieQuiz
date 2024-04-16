@@ -9,24 +9,27 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
     @IBOutlet weak private var noUIButton: UIButton!
     @IBOutlet weak private var yesUIButton: UIButton!
     
+    @IBOutlet private var activityIndicator: UIActivityIndicatorView!
+    
     private var currentQuestionIndex: Int = 0
     private var correctAnswers: Int = 0
     private let questionsAmount: Int = 10
-    private var questionFactory: QuestionFactoryProtocol = QuestionFactory()
+    private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var statisticService: StatisticService?
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+       
+       previewImage.layer.cornerRadius = 20
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         statisticService = StatisticServiceImplementation()
-        
-        let questionFactory = QuestionFactory()
-        questionFactory.setup(delegate: self)
-        self.questionFactory = questionFactory
-        questionFactory.requestNextQuestion()
-    
+
+        showLoadingIndicator()
+        questionFactory?.loadData()
     }
+    
     // MARK: - QuestionFactoryDelegate
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
@@ -56,9 +59,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
             self.showNextQuestionOrResults()
             
             self.previewImage.layer.borderWidth = 0
-            
         }
     }
+    
     @IBAction private func noButtonCliked(_ sender: Any) {
         guard let currentQuestion = currentQuestion else {
             return
@@ -68,8 +71,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
         
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
-    
-    
     
     @IBAction private func yesButtonClicked(_ sender: Any) {
         guard let currentQuestion = currentQuestion else {
@@ -81,13 +82,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
-    
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        let questionStep = QuizStepViewModel(
-            image: UIImage(named: model.image) ?? UIImage(),
+        return QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-        return questionStep
     }
     
     private func show(quiz step: QuizStepViewModel) {
@@ -122,15 +121,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
                 noUIButton.isEnabled = true
         } else {
             currentQuestionIndex += 1
-            questionFactory.requestNextQuestion()
+            questionFactory?.requestNextQuestion()
             yesUIButton.isEnabled = true
             noUIButton.isEnabled = true
         }
     }
 
-
-
-    
     private func showResult(quiz result: QuizResultsViewModel) {
         let alertModel = AlertModel(
             title: result.title,
@@ -139,10 +135,43 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate  
             
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
-                self.questionFactory.requestNextQuestion()
+                self.questionFactory?.requestNextQuestion()
             }
         
         AlertPresenter.presentAlert(from: self, with: alertModel)
+    }
+    
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
+    }
+    
+    private func showNetworkError(message: String) {
+        showLoadingIndicator()
+        
+        let alertError = AlertModel(
+            title: "Ошибка",
+            message: message,
+            buttonText: "Попробовать еще раз") { [weak self] in
+                guard let self = self else { return }
+                
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                
+                self.questionFactory?.requestNextQuestion()
+            }
+            
+        AlertPresenter.presentAlert(from: self, with: alertError)
+
+    }
+    
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = true 
+        questionFactory?.requestNextQuestion()
+    }
+
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription)
     }
     
     
