@@ -1,12 +1,11 @@
 import Foundation
-import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
    
-    let questionsAmount: Int = 10
+    private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
-    var currentQuestion: QuizQuestion?
-    weak var viewController: MovieQuizViewControllerProtocol?
+    private var currentQuestion: QuizQuestion?
+    private weak var viewController: MovieQuizViewControllerProtocol?
     var correctAnswers: Int = 0
     var questionFactory: QuestionFactoryProtocol?
     var statisticService: StatisticService?
@@ -34,7 +33,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     
         func convert(model: QuizQuestion) -> QuizStepViewModel {
             return QuizStepViewModel(
-                image: UIImage(data: model.image) ?? UIImage(),
+                image: model.image,
                 question: model.text,
                 questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
         }
@@ -144,7 +143,4 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
                self.showNextQuestionOrResults()
            }
        }
-        
-    
-    
 }

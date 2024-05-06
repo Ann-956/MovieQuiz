@@ -1,5 +1,4 @@
 import UIKit
-import Foundation
 
 final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
@@ -38,9 +37,11 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     }
     
     func show(quiz step: QuizStepViewModel) {
+        let image = UIImage(data: step.image) ?? UIImage()
+        
         previewImage.layer.borderColor = UIColor.clear.cgColor
         indexLable.text = step.questionNumber
-        previewImage.image = step.image
+        previewImage.image = image
         questionLable.text = step.question
     }
 
