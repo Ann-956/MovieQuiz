@@ -1,9 +1,15 @@
 import Foundation
 
-struct NetworkClient {
+protocol NetworkRouting {
+    func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void)
+}
 
-    private enum NetworkError: Error {
+struct NetworkClient: NetworkRouting {
+
+    enum NetworkError: Error {
+        case errorMessage(String)
         case codeError
+
     }
     
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
